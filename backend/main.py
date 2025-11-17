@@ -61,9 +61,13 @@ class REcipeResource(Resource):
 
 @api.route('/recipe/<int:id>')
 class RecipebyIdResource(Resource):
+    @api.marshal_with(recipe_model)
     def get(self, id):
         """Get a recipe by Id"""
-        pass
+        # searches for the recipe by id and returns a 404 err if not found
+        recipe=Recipe.query.get_or_404(id)
+
+        return recipe
 
     def put(self, id):
         """Update recipe by Id"""
