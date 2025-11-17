@@ -1,9 +1,10 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_restx import Api, Resource, fields
 from config import DevConfig
-from models import Recipe
+from models import Recipe, User
 from exts import db
 from flask_migrate import Migrate
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 
@@ -30,6 +31,15 @@ recipe_model=api.model(
     }
 )
 
+signup_model=api.model(
+    "SignUp",
+    {
+        "username": fields.String(),
+        "email": fields.String(),
+        "password": fields.String()
+    }
+)
+
 
 @api.route('/hello')
 class HelloResource(Resource):
@@ -40,8 +50,28 @@ class HelloResource(Resource):
 # === Auth routes ===
 @api.route('/signup')
 class SignUp(Resource):
-    def get(self):
-        pass
+    @api.expect(signup_model) #decrator for swagger UI
+    def post(self):
+
+        data=request.get_json()
+
+        # check if user exists
+        username=data.get('username')
+        db_user = User.query.filter_by(username=username).first()
+
+        if db_user is not None:
+            return jsonify({"message": f"{username} already exists"})
+
+        new_user = User(
+            username=data.get('username'),
+            email=data.get('email'),
+            password=generate_password_hash(data.get('password'))
+        )
+
+        new_user.save()
+
+        return jsonify({"message": "user created successfully"})
+        
     
 @api.route('/login')
 class Login(Resource):
@@ -60,6 +90,7 @@ class RecipeResource(Resource):
         
 
     @api.marshal_with(recipe_model)
+    @api.expect(recipe_model) #decorator for swagger UI
     def post(self):
         """Create a new recipe"""
 
