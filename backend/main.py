@@ -7,6 +7,7 @@ from flask_migrate import Migrate
 from models import Recipe, User
 from auth import auth_ns
 from recipes import recipe_ns
+from flask_cors import CORS
 
 
 # create a factory function
@@ -14,6 +15,8 @@ def create_app(config):
     # initialise the app
     app = Flask(__name__)
     app.config.from_object(config)
+
+    CORS(app)
 
     db.init_app(app)
 
